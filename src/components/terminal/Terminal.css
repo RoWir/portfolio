@@ -1,0 +1,73 @@
+.terminalWrap {
+    height: 400px;
+    width: 600px;
+
+    border: #393E46 2px solid;
+    border-radius: 10px;
+}
+
+.terminalHeadbar {
+    width: 100%;
+    height: 25px;
+    display: grid;
+    align-items: center;
+    grid-template-columns: 1fr 1fr 1fr;
+    box-sizing: border-box;
+    padding: 0px 5px;
+    
+    background-color: #393E46;
+    
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;    
+}
+
+.terminalHeaderActions {
+    display: flex;
+    gap: 5px;
+}
+
+.terminalHeaderActions > svg {
+    font-size: 11px;
+}
+
+.terminalName {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 13px;
+}
+
+.terminalBody {
+    padding: 5px;
+    font-size: 12px;
+    background-color: #101216;
+    height: 375px;
+    display: flex;
+    flex-direction: column;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    box-sizing: border-box;
+    overflow-y: scroll;
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.terminalBody::-webkit-scrollbar { 
+    display: none;  /* Safari and Chrome */
+}
+
+.terminalInputWrap {
+    width: 100%;
+    display: flex;
+}
+
+.terminalInput {
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    flex-grow: 1;
+    overflow: hidden;
+    height: auto;
+}
