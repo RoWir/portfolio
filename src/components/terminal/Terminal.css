@@ -71,3 +71,8 @@
     overflow: hidden;
     height: auto;
 }
+
+.terminalInputForm {
+    display: flex;
+    flex-grow: 1;
+}

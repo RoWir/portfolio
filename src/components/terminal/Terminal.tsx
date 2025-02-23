@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { ChangeEvent, FC, FormEvent, useState } from "react";
 import "./Terminal.css"
 import { FaCircle } from "react-icons/fa";
 
@@ -14,6 +14,17 @@ const Terminal: FC = () => {
 
     const [commandPrefix, setCommandPrefix] = useState("user@des: ~ % ");
 
+    const [userInput, setUserInput] = useState("");
+
+    const onMessageSent = (e:FormEvent) => {
+        e.preventDefault();
+        console.log(userInput);
+    }
+
+    const onTerminalInputChange = (e:ChangeEvent<HTMLInputElement>) => {
+        setUserInput(e.target.value);
+    }
+
     return (
         <div className="terminalWrap">
             <div className="terminalHeadbar">
@@ -28,7 +39,17 @@ const Terminal: FC = () => {
             </div>
             <div className="terminalBody">
                 {commandLog.map(command => (<span key={command.message}>{command.prefix ? commandPrefix:''}{command.message}</span>))}
-                <span className="terminalInputWrap">{commandPrefix}<input type="text" className="terminalInput"></input></span>
+                <span className="terminalInputWrap">{commandPrefix}
+                    <form className="terminalInputForm" onSubmit={onMessageSent}>
+                        <input 
+                            type="text" 
+                            className="terminalInput"
+                            value={userInput}
+                            onChange={onTerminalInputChange}
+                        />
+                        <button style={{ width: 0 }} hidden></button>
+                    </form>
+                </span>
             </div>
         </div>
     );
