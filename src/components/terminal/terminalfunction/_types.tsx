@@ -1,9 +1,5 @@
 import { ReactElement } from "react";
-
-type Command = {
-    message: string | ReactElement,
-    prefix: boolean
-}
+import { Command } from "../_types";
 
 export type TerminalFunction = (
     userInput: string,

@@ -1,4 +1,6 @@
-export default () => {
+import { TerminalFunction } from "./_types";
+
+const aboutMe: TerminalFunction = () => {
     return (
         <div style={{ display: "flex", flexDirection: 'column' }}>
             <span>Mein Name ist Robin Wirth</span>
@@ -7,6 +9,8 @@ export default () => {
         </div>
     )
 }
+
+export default aboutMe;
 
 export function description() {
     return "Gibt einen kleinen Überblick über mich";

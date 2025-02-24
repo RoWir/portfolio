@@ -1,1 +1,0 @@
-export default (userInput:string) => ("Der Benutzer hat: '" + userInput + "' eingegeben.")

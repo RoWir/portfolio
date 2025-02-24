@@ -1,4 +1,6 @@
-export default () => {
+import { TerminalFunction } from "./_types";
+
+const help:TerminalFunction = () => {
     const headingStyle={
         fontWeight: 'bold'
     };
@@ -14,16 +16,17 @@ export default () => {
         display: 'inline-flex'
     };
 
-    const commandImports: Record<string, { description: Function|undefined }> = import.meta.glob("/src/components/terminal/terminalfunction/*.tsx", { eager: true });
+    const commandImports: Record<string, { description: () => string|undefined }> = import.meta.glob("/src/components/terminal/terminalfunction/*.tsx", { eager: true });
     const commandList:{ name: string|undefined, description: string|undefined }[] = Object.entries(commandImports)
         .filter((path) => !path[0].includes('_types.tsx'))
         .map(([path, mod]) => {
-        const fileName = path.split('/').pop();
-        return {
-            name: fileName?.replace(/\.[^/.]+$/, ''),
-            description: mod.description !== undefined ? mod.description() : ''
-        };
-    });
+            const fileName = path.split('/').pop();
+            return {
+                name: fileName?.replace(/\.[^/.]+$/, ''),
+                description: mod.description !== undefined ? mod.description() : ''
+            };
+        }
+    );
 
     console.log(commandImports)
     console.log(commandList)
@@ -35,3 +38,5 @@ export default () => {
         </div>
     );
 }
+
+export default help;

@@ -1,15 +1,12 @@
 import { ChangeEvent, FC, FormEvent, ReactElement, useState } from "react";
 import "./Terminal.css"
 import { FaCircle } from "react-icons/fa";
+import { TerminalFunction } from "./terminalfunction/_types";
+import { Command } from "./_types";
 
 // interface TerminalProps {
     
 // }
-
-type Command = {
-    message: string | ReactElement,
-    prefix: boolean
-}
 
 const Terminal: FC = () => {
     const [commandLog, setCommandLog] = useState<Command[]>([
@@ -28,8 +25,8 @@ const Terminal: FC = () => {
         e.preventDefault();
         addToCommandLog(userInput, true);
         
-        const commandImports: Record<string, { default: Function }> = import.meta.glob("/src/components/terminal/terminalfunction/*.tsx", { eager: true });
-        const commandList:{ func: Function, name: string|undefined }[] = Object.entries(commandImports)
+        const commandImports: Record<string, { default: () => string | ReactElement }> = import.meta.glob("/src/components/terminal/terminalfunction/*.tsx", { eager: true });
+        const commandList:{ func: TerminalFunction, name: string|undefined }[] = Object.entries(commandImports)
             .filter((path) => !path[0].includes('_types.tsx'))
             .map(([path, mod]) => {
             const fileName = path.split('/').pop();
@@ -38,6 +35,8 @@ const Terminal: FC = () => {
                 name: fileName?.replace(/\.[^/.]+$/, '')
             };
         });
+
+        console.log(commandImports);
 
         commandList.forEach(command => {
             if (command.name === userInput) {
