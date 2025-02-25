@@ -28,9 +28,6 @@ const Help:TerminalFunction = () => {
             };
         }
     );
-
-    console.log(commandImports)
-    console.log(commandList)
     
     return (
         <div style={{ display: 'flex', flexDirection: 'column' }}>

@@ -9,8 +9,6 @@ const Mkfile:TerminalFunction = ({userInput}) => {
 
     const file = new TextEncoder().encode("This file was created by you!");
 
-    console.log(new TextDecoder().decode(file));
-
     return (
         "Die Datei '" + fileName + "' wurde erstellt"
     );

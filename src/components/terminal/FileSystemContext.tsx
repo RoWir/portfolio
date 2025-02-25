@@ -31,7 +31,6 @@ export const CommandPrefixProvider: React.FC<PropsWithChildren> = ({ children })
 
         if (pathArray[0] === '..') {
             if (currentPath.length > 1) {
-                console.log("double pls no")
                 setCurrentPath(prevState => prevState.slice(0, -1));
                 return true;
             } else {
@@ -45,11 +44,9 @@ export const CommandPrefixProvider: React.FC<PropsWithChildren> = ({ children })
             const folder = systemTree.find(node => node.type === 'folder' && node.name === path);
             if (folder && folder.type === 'folder') currentNode = folder.children;
         })
-        console.log(pathArray);
+
         for (const path of pathArray) {
             const folder = currentNode.find(node => node.type === 'folder' && node.name === path);
-            console.log(folder);
-            console.log(path);
             if (folder && folder.type === 'folder') {
                 currentNode = folder.children;
             } else {
@@ -59,10 +56,6 @@ export const CommandPrefixProvider: React.FC<PropsWithChildren> = ({ children })
         setCurrentPath(prevState => [...prevState, ...pathArray]);
         return true;
     }
-
-    useEffect(() => {
-        console.log(currentPath)
-    },[currentPath])
 
     return (
     <FileSystemContext.Provider value={{ changeNode, currentPath }}>
