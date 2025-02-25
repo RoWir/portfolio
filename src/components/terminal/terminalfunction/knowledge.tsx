@@ -1,12 +1,12 @@
 import { TerminalFunction } from "./_types";
 
-const knowledge: TerminalFunction = () => {
+const Knowledge: TerminalFunction = () => {
     return (
         "a"
     );
 }
 
-export default knowledge;
+export default Knowledge;
 
 export function description() {
     return "Listet eine Übersicht über meine Programmierkenntnisse auf"

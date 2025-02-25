@@ -1,8 +1,9 @@
 import { TerminalFunction } from "./_types";
 
-const help:TerminalFunction = () => {
+const Help:TerminalFunction = () => {
     const headingStyle={
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        margin: '0 auto'
     };
     const commandRow={
         marginLeft: '10px'
@@ -39,4 +40,4 @@ const help:TerminalFunction = () => {
     );
 }
 
-export default help;
+export default Help;

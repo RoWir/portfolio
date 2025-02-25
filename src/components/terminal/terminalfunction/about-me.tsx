@@ -1,6 +1,6 @@
 import { TerminalFunction } from "./_types";
 
-const aboutMe: TerminalFunction = () => {
+const AboutMe: TerminalFunction = () => {
     return (
         <div style={{ display: "flex", flexDirection: 'column' }}>
             <span>Mein Name ist Robin Wirth</span>
@@ -10,8 +10,8 @@ const aboutMe: TerminalFunction = () => {
     )
 }
 
-export default aboutMe;
+export default AboutMe;
 
 export function description() {
-    return "Gibt einen kleinen Überblick über mich";
+    return "About me";
 }

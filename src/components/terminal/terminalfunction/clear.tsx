@@ -1,13 +1,13 @@
 import { TerminalFunction } from "./_types";
 
-const clear: TerminalFunction = (_userInput, _commandPrefix, _setUserInput, _setCommandPrefix, setCommandLog) => {
+const Clear: TerminalFunction = ({ setCommandLog }) => {
     setCommandLog([
-        { message: "Type 'help' to show all the available commands", prefix: false }
+        { message: "Type 'help' to show all the available commands", prefix: '' }
     ]);
     return ("Cleared!");
 }
 
-export default clear;
+export default Clear;
 
 export function description() {
     return "Leert das Terminal";

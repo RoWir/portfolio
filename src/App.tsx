@@ -1,6 +1,6 @@
 import './App.css'
 import Terminal from './components/terminal/Terminal'
-import { CommandPrefixProvider } from './components/terminal/TerminalContext'
+import { CommandPrefixProvider } from './components/terminal/FileSystemContext'
 
 function App() {
 
