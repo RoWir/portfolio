@@ -1,8 +1,7 @@
-import { ChangeEvent, FC, FormEvent, KeyboardEvent, ReactElement, useContext, useEffect, useRef, useState } from "react";
+import { ChangeEvent, FC, FormEvent, KeyboardEvent, useContext, useRef, useState } from "react";
 import "./Terminal.css"
 import { FaCircle } from "react-icons/fa";
 import { TerminalFunction } from "./terminalfunction/_types";
-import { Command } from "./_types";
 import { FileSystemContext } from "./FileSystemContext";
 
 // interface TerminalProps {
@@ -11,10 +10,8 @@ import { FileSystemContext } from "./FileSystemContext";
 
 const Terminal: FC = () => {
     const inputRef = useRef<HTMLInputElement>(null);
-    const [commandLog, setCommandLog] = useState<Command[]>([
-        { message: "Type 'help' to show all the available commands", prefix: '' }
-    ]);
-    const [commandPrefix, setCommandPrefix] = useState("user@des: ");
+    
+    
     const [userInput, setUserInput] = useState("");
     const [inputHistory, setInputHistory] = useState<string[]>([]);
     const [historyIndex, setHistoryIndex] = useState<number|null>(null);
@@ -22,15 +19,11 @@ const Terminal: FC = () => {
     const fileSystem = useContext(FileSystemContext);
     if (!fileSystem) return (<div>Error with loading Filesystem Context</div>);
 
-    const addToCommandLog = (message:string|ReactElement, prefix:string) => {
-        setCommandLog(prevState => ([ ...prevState, { message: message, prefix: prefix }]));
-    }
+    const {addToCommandLog, commandLog, getCurrentPrefix } = fileSystem; 
 
     const addToInputHistory = (input:string) => {
         setInputHistory(prevState => ([...prevState, input]));
     }
-
-    const getCurrentPrefix = () => commandPrefix + (fileSystem.currentPath.length !== 0 ? fileSystem.currentPath.join('/') : '~') + ' %\xa0';
 
     const onMessageSent = (e:FormEvent) => {
         e.preventDefault();
@@ -57,11 +50,8 @@ const Terminal: FC = () => {
                  
                 addToCommandLog(
                     <ComponentName 
-                        userInput={userInput} 
-                        commandPrefix={commandPrefix} 
+                        userInput={userInput}  
                         setUserInput={setUserInput} 
-                        setCommandPrefix={setCommandPrefix} 
-                        setCommandLog={setCommandLog}
                     />, ''
                 );
             }

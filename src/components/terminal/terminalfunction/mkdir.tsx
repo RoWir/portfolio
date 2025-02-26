@@ -2,20 +2,22 @@ import { useContext, useEffect } from "react";
 import { TerminalFunction } from "./_types";
 import { FileSystemContext } from "../FileSystemContext";
 
-const Clear: TerminalFunction = () => {
+const Mkdir:TerminalFunction = ({userInput}) => {
+    const folderName = userInput.split(" ")[1];
+
+    if (!folderName) {
+        return "Bitte einen Dateinamen angeben"
+    }
+
     const fileSystem = useContext(FileSystemContext);
     if (!fileSystem) return "Context Error!";
 
     useEffect(() => {
-        fileSystem.clearCommandLog();
-        fileSystem.addToCommandLog("Cleared!","");
+        fileSystem.createFolder(folderName);
     }, []);
         
-    return ("");
+    return "";
 }
 
-export default Clear;
+export default Mkdir;
 
-export function description() {
-    return "Leert das Terminal";
-}
