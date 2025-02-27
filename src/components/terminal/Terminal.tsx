@@ -1,106 +1,138 @@
-import { ChangeEvent, FC, FormEvent, KeyboardEvent, useContext, useEffect, useRef, useState } from "react";
+import { ChangeEvent, FC, FormEvent, KeyboardEvent, useContext, useEffect, useRef, useState, useMemo, useCallback } from "react";
 import "./Terminal.css"
 import { FaCircle } from "react-icons/fa";
 import { TerminalFunction } from "./terminalfunction/_types";
-import { FileSystemContext, FileSystemContextType } from "./FileSystemContext";
-
-// interface TerminalProps {
-    
-// }
+import { FileSystemContext } from "./FileSystemContext";
 
 const Terminal: FC = () => {
     const inputRef = useRef<HTMLInputElement>(null);
-
     const [userInput, setUserInput] = useState("");
     const [inputHistory, setInputHistory] = useState<string[]>([]);
     const [historyIndex, setHistoryIndex] = useState<number|null>(null);
+    const [filteredAutocompleteSuggestions, setFilteredAutocompleteSuggestions] = useState<string[]>([]);
+    const [autocompleteSuggestions, setAutocompleteSuggestions] = useState<string[]>([]);
+    const [autocompleteIndex, setAutocompleteIndex] = useState<number>(0);
 
     const fileSystem = useContext(FileSystemContext);
-    if (!fileSystem) return (<div>Error with loading Filesystem Context</div>);
-
-    const { addToCommandLog, commandLog, getCurrentPrefix } = fileSystem; 
-
-    const commandImports: Record<string, { default: TerminalFunction, autoCompleteValues: (fileSystem:FileSystemContextType) => string[][]|undefined }> = import.meta.glob("/src/components/terminal/terminalfunction/*.tsx", { eager: true });
     
-    const commandList:{ func: TerminalFunction, name: string, autoCompleteValues: string[][] }[] = Object.entries(commandImports)
-        .filter((path) => !path[0].includes('_types.tsx'))
-        .map(([path, mod]) => {
-            const fileName = path.split('/').pop() ?? path;
+    const commandImports: Record<string, { 
+        default: TerminalFunction
+    }> = import.meta.glob("/src/components/terminal/terminalfunction/*.tsx", { eager: true });
+    
+    const commandList = useMemo(() => {
+        if (!fileSystem) return [];
+        
+        return Object.entries(commandImports)
+            .filter(([path]) => !path.includes('_types.tsx'))
+            .map(([path, mod]) => {
+                const componentName = path.split('/').pop() ?? path;
+                const CommandComponent = mod.default;
+                return {
+                    func: CommandComponent,
+                    name: componentName.replace(/\.[^/.]+$/, ''),
+                    autoCompleteValues: CommandComponent.autoCompleteValues?.(fileSystem) ?? [[]]
+                };
+            });
+    }, [fileSystem]);
 
-            return {
-                func: mod.default,
-                name: fileName.replace(/\.[^/.]+$/, ''),
-                autoCompleteValues: mod.autoCompleteValues?.(fileSystem) ?? [[]]
-            };
-        });
-
-    const [autocompleteSuggestions, setAutocompleteSuggestions] = useState<string[]>(commandList.map(command => command.name));
-    const [filteredAutocompleteSuggestions, setFilteredAutocompleteSuggestions] = useState<string[]>([]);
-    const [autocompleteIndex, setAutocompleteIndex] = useState<number>(0);
-        console.log(commandList);
     useEffect(() => {
-        setFilteredAutocompleteSuggestions(autocompleteSuggestions?.filter(word => word.startsWith(userInput.split(' ')[userInput.split(' ').length-1])));
-    }, [autocompleteSuggestions])
+        if (commandList.length > 0) {
+            setAutocompleteSuggestions(commandList.map(command => command.name));
+        }
+    }, [commandList]);
 
-    const addToInputHistory = (input:string) => {
-        setInputHistory(prevState => ([...prevState, input]));
-    }
+    useEffect(() => {
+        const currentWord = userInput.split(' ')[userInput.split(' ').length-1];
+        setFilteredAutocompleteSuggestions(
+            autocompleteSuggestions?.filter(word => word.startsWith(currentWord))
+        );
+    }, [autocompleteSuggestions, userInput]);
 
-    const onMessageSent = (e:FormEvent) => {
+    const addToInputHistory = useCallback((input: string) => {
+        setInputHistory(prev => [...prev, input]);
+    }, []);
+
+    const handleCommand = useCallback((input: string) => {
+        if (!fileSystem) return;
+        
+        const { addToCommandLog } = fileSystem;
+        let commandFound = false;
+        const commandName = input.split(" ")[0];
+        
+        const command = commandList.find(cmd => cmd.name === commandName);
+        if (command && input !== "") {
+            commandFound = true;
+            const ComponentName = command.func;
+            addToCommandLog(
+                <ComponentName 
+                    userInput={input}  
+                    setUserInput={setUserInput}
+                    setAutocompleteSuggestions={setAutocompleteSuggestions}
+                />, 
+                ''
+            );
+        }
+        
+        if (!commandFound && input !== "") {
+            addToCommandLog(`Der Befehl: '${input}' konnte nicht gefunden werden`, '');
+        }
+    }, [commandList, fileSystem]);
+
+    const updateAutocompleteSuggestions = useCallback((input: string) => {
+        const inputParts = input.split(' ');
+        
+        if (inputParts.length === 1) {
+            setAutocompleteSuggestions(commandList.map(command => command.name));
+        } else {
+            const currentFunctionName = inputParts[0];
+            const commandIndex = commandList.findIndex(command => command.name === currentFunctionName);
+            
+            if (commandIndex !== -1) {
+                const autoCompleteValues = commandList[commandIndex].autoCompleteValues;
+                const suggestionIndex = inputParts.length - 2;
+                
+                if (autoCompleteValues.length > suggestionIndex) {
+                    setAutocompleteSuggestions(autoCompleteValues[suggestionIndex]);
+                }
+            }
+        }
+    }, [commandList]);
+
+    const onMessageSent = useCallback((e: FormEvent) => {
         e.preventDefault();
+        if (!fileSystem) return;
+        
+        const { addToCommandLog, getCurrentPrefix } = fileSystem;
         addToCommandLog(userInput, getCurrentPrefix());
         addToInputHistory(userInput);
         setHistoryIndex(null);
-
-        var commandFound = false;
-        commandList.forEach(command => {
-            if (command.name === userInput.split(" ")[0]) {
-                commandFound = true;
-                const ComponentName: TerminalFunction = command.func
-
-                addToCommandLog(
-                    <ComponentName 
-                        userInput={userInput}  
-                        setUserInput={setUserInput}
-                        setAutocompleteSuggestions={setAutocompleteSuggestions}
-                    />, ''
-                );
-            }
-        });
         
-        if (!commandFound && userInput !== "") {
-            addToCommandLog("Der Befehl: '" + userInput + "' konnte nicht gefunden werden", '');
-        }
-
+        handleCommand(userInput);
         setUserInput("");
-    }
+    }, [userInput, fileSystem, addToInputHistory, handleCommand]);
 
-    const onTerminalInputChange = (e:ChangeEvent<HTMLInputElement>) => {
+    const onTerminalInputChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
         const inputValue = e.target.value;
         setUserInput(inputValue);
-
-        if (inputValue.split(' ').length === 1) {
-            setAutocompleteSuggestions(commandList.map(command => command.name));
-        } else {
-            const currentFunctionName = inputValue.split(' ')[0];
-            setAutocompleteSuggestions(commandList[commandList.findIndex(command => command.name === currentFunctionName)].autoCompleteValues[inputValue.split(' ').length-2]);
-        }
+        updateAutocompleteSuggestions(inputValue);
         
-        if (inputValue.length === 0 ) {
+        if (inputValue.length === 0) {
             setFilteredAutocompleteSuggestions(autocompleteSuggestions);
             return;
         }
-
-        setFilteredAutocompleteSuggestions(autocompleteSuggestions?.filter(word => word.startsWith(inputValue.split(' ')[inputValue.split(' ').length-1])));
+        
+        const currentWord = inputValue.split(' ')[inputValue.split(' ').length-1];
+        setFilteredAutocompleteSuggestions(
+            autocompleteSuggestions?.filter(word => word.startsWith(currentWord))
+        );
         setAutocompleteIndex(0);
-    }
+    }, [autocompleteSuggestions, updateAutocompleteSuggestions]);
 
-    const onTerminalClick = () => {
-        if (inputRef.current === null) return ;
-        inputRef.current.focus();
-    }
+    const onTerminalClick = useCallback(() => {
+        inputRef.current?.focus();
+    }, []);
 
-    const onTerminalInputKeyDown = (event:KeyboardEvent<HTMLInputElement>) => {
+    const onTerminalInputKeyDown = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
         if (event.code === 'ArrowUp') {
             if (inputHistory.length > 0) {
                 const newHistoryIndex = historyIndex === null ? inputHistory.length - 1 : Math.max(0, historyIndex - 1);
@@ -119,15 +151,25 @@ const Terminal: FC = () => {
                 }
             }
         } else if (event.code === 'Tab') {
-            event.preventDefault(); 
+            event.preventDefault();
             
-            setUserInput(userInput.split(' ').slice(0, -1).concat(filteredAutocompleteSuggestions[autocompleteIndex]).join(' '));
-
-            setAutocompleteIndex((prev) =>
-                prev + 1 < filteredAutocompleteSuggestions.length ? prev + 1 : 0
-            );
+            if (filteredAutocompleteSuggestions.length > 0) {
+                const inputParts = userInput.split(' ');
+                inputParts[inputParts.length - 1] = filteredAutocompleteSuggestions[autocompleteIndex];
+                setUserInput(inputParts.join(' '));
+                
+                setAutocompleteIndex(prev => 
+                    prev + 1 < filteredAutocompleteSuggestions.length ? prev + 1 : 0
+                );
+            }
         }
+    }, [inputHistory, historyIndex, filteredAutocompleteSuggestions, autocompleteIndex, userInput]);
+
+    if (!fileSystem) {
+        return <div>Error with loading Filesystem Context</div>;
     }
+    
+    const { commandLog, getCurrentPrefix } = fileSystem;
 
     return (
         <div className="terminalWrap">
@@ -142,8 +184,11 @@ const Terminal: FC = () => {
                 </div>
             </div>
             <div className="terminalBody" onClick={onTerminalClick}>
-                {commandLog.map((command,index) => (<span key={index}>{command.prefix}{command.message}</span>))}
-                <span className="terminalInputWrap">{getCurrentPrefix()}
+                {commandLog.map((command, index) => (
+                    <span key={index}>{command.prefix}{command.message}</span>
+                ))}
+                <span className="terminalInputWrap">
+                    {getCurrentPrefix()}
                     <form className="terminalInputForm" onSubmit={onMessageSent}>
                         <input 
                             type="text" 
@@ -151,7 +196,7 @@ const Terminal: FC = () => {
                             value={userInput}
                             onChange={onTerminalInputChange}
                             ref={inputRef}
-                            onKeyDown={(e) => onTerminalInputKeyDown(e)}
+                            onKeyDown={onTerminalInputKeyDown}
                         />
                         <button style={{ width: 0 }} hidden></button>
                     </form>

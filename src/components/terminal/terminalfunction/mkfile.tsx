@@ -1,8 +1,9 @@
 import { useContext, useEffect } from "react";
-import { FunctionParam, TerminalFunction } from "./_types";
+import { TerminalFunction } from "./_types";
 import { FileSystemContext } from "../FileSystemContext";
 
 const Mkfile:TerminalFunction = ({userInput}) => {
+    const fileSystem = useContext(FileSystemContext);
     const inputSplit = userInput.split(" ");
     const fileName = inputSplit[1];
     let fileContent = userInput.split(" ")[2];
@@ -11,15 +12,12 @@ const Mkfile:TerminalFunction = ({userInput}) => {
         fileContent = inputSplit.slice(2).join(" ");
     }
 
-    if (!fileName) {
-        return "Bitte einen Dateinamen angeben"
-    }
-
-    const fileSystem = useContext(FileSystemContext);
-    if (!fileSystem) return "Context Error!";
-    console.log(fileSystem.createFile.toString())
     useEffect(() => {
-        fileSystem.createFile(fileName, fileContent ?? "Du hast diese Datei erstellt!");
+        if (fileName) {
+            fileSystem?.createFile(fileName, fileContent ?? "Du hast diese Datei erstellt!");
+        } else {
+            fileSystem?.addToCommandLog("Bitte einen Dateinamen angeben", "");
+        }
     }, []);
         
     return "";
@@ -27,13 +25,11 @@ const Mkfile:TerminalFunction = ({userInput}) => {
 
 export default Mkfile;
 
-export function description() {
-    return "Erstellt eine Datei";
-}
+Mkfile.description = "Erstellt eine Datei";
 
-export const category = 'filesystem';
+Mkfile.category = 'filesystem';
 
-export const functionParams: FunctionParam[] = [{ 
+Mkfile.functionParams = [{ 
     params: [{ 
         param: 'Name', 
         required: true 

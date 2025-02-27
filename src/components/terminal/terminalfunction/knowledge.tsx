@@ -7,7 +7,4 @@ const Knowledge: TerminalFunction = () => {
 }
 
 export default Knowledge;
-
-export function description() {
-    return "Listet eine Übersicht über meine Programmierkenntnisse auf"
-}
+Knowledge.description = "Listet eine Übersicht über meine Programmierkenntnisse auf"

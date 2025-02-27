@@ -20,7 +20,7 @@ export const FileSystemContext = createContext<FileSystemContextType>(null);
 type File = {
     type: 'file',
     name: string,
-    file: ArrayBuffer
+    file: Uint8Array<ArrayBufferLike>
 }
 
 type Folder = {
@@ -31,11 +31,11 @@ type Folder = {
 
 type TreeNode = (File|Folder)[]
 
-export const CommandPrefixProvider: React.FC<PropsWithChildren> = ({ children }) => {
+export const FileSystemProvider: React.FC<PropsWithChildren> = ({ children }) => {
     const [systemTree, setSystemTree] = useState<TreeNode>([
         {type:'folder' as const,name:'testFolder',children:[{type:'folder' as const,name:'test2',children:[]}]},
-        {type:'file' as const,name:'testFile',file: new ArrayBuffer()},
-        {type:'file' as const,name:'anotherTestFile',file: new ArrayBuffer()}
+        {type:'file' as const,name:'testFile',file: new Uint8Array()},
+        {type:'file' as const,name:'anotherTestFile',file: new Uint8Array()}
     ]);
     const [currentPath, setCurrentPath] = useState<string[]>([]);
     const [commandLog, setCommandLog] = useState<Command[]>([

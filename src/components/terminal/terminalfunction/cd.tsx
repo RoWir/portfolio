@@ -2,12 +2,12 @@ import { useContext, useEffect, useState } from "react";
 import { TerminalFunction } from "./_types";
 import { FileSystemContext, FileSystemContextType } from "../FileSystemContext";
 
-const Cd:TerminalFunction = ({ userInput }) => {
+const Cd: TerminalFunction = ({ userInput }) => {
     const [returnMessage, setReturnMessage] = useState<string>("");
     const fileSystem = useContext(FileSystemContext);
-    if (!fileSystem) return "Context Error!";
 
     useEffect(() => {
+        if (!fileSystem) return;
         const path = userInput.split(" ")[1];
 
         if (path){
@@ -24,13 +24,11 @@ const Cd:TerminalFunction = ({ userInput }) => {
 
 export default Cd;
 
-export function description() {
-    return "Verzeichnis ändern"
-}
+Cd.description = "Verzeichnis ändern"
 
-export const category = 'filesystem';
+Cd.category = "filesystem";
 
-export const autoCompleteValues = (fileSystem: FileSystemContextType) => [
+Cd.autoCompleteValues = (fileSystem: FileSystemContextType) => [
     fileSystem!.getCurrentNode()
         .filter(node => node.type === 'folder')
         .map(node => node.name)

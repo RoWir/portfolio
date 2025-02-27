@@ -4,9 +4,9 @@ import { FileSystemContext } from "../FileSystemContext";
 
 const Clear: TerminalFunction = () => {
     const fileSystem = useContext(FileSystemContext);
-    if (!fileSystem) return "Context Error!";
-
+    
     useEffect(() => {
+        if (!fileSystem) return console.log("Context Error!");
         fileSystem.clearCommandLog();
         fileSystem.addToCommandLog("Cleared!","");
     }, []);
@@ -16,6 +16,4 @@ const Clear: TerminalFunction = () => {
 
 export default Clear;
 
-export function description() {
-    return "Leert das Terminal";
-}
+Clear.description = "Leert das Terminal";

@@ -1,6 +1,8 @@
 import { FunctionParam, TerminalFunction } from "./_types";
 
-type ModuleInfo = Record<string, { description: () => string|undefined, category: string|undefined, functionParams: FunctionParam[]|undefined }>;
+type ModuleInfo = Record<string, { 
+    default: TerminalFunction
+}>;
 type CommandInfo = { name: string, description: string, category: string, functionParams: FunctionParam[] };
 
 const headingStyle:React.CSSProperties={
@@ -34,11 +36,12 @@ const getCommandInfos = (command?: string):CommandInfo[] => {
         .filter((path) => !path[0].includes('_types.tsx'))
         .map(([path, mod]) => {
             const fileName = path.split('/').pop() ?? path;
+            const CommandComponent = mod.default;
             return {
                 name: fileName?.replace(/\.[^/.]+$/, ''),
-                description: mod.description?.() ?? '',
-                category: mod.category ?? 'general',
-                functionParams: mod.functionParams ?? []
+                description: CommandComponent.description ?? '',
+                category: CommandComponent.category ?? 'general',
+                functionParams: CommandComponent.functionParams ?? []
             };
         })
         .filter(commandEntry => !command || commandEntry.name === command);
@@ -95,7 +98,6 @@ const getHelpOverview = () => {
 }
 
 export default Help;
-
-export const autoCompleteValues = () => [
+Help.autoCompleteValues = () => [
     getCommandInfos().map(command => command.name)
 ];

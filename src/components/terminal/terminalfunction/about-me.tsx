@@ -12,6 +12,4 @@ const AboutMe: TerminalFunction = () => {
 
 export default AboutMe;
 
-export function description() {
-    return "About me";
-}
+AboutMe.description = "About me";

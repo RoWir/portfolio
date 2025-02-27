@@ -1,18 +1,18 @@
 import { useContext, useEffect } from "react";
-import { FunctionParam, TerminalFunction } from "./_types";
+import { TerminalFunction } from "./_types";
 import { FileSystemContext } from "../FileSystemContext";
 
 const Ls:TerminalFunction = () => {
     const fileSystem = useContext(FileSystemContext);
-    if (!fileSystem) return "Context Error!";
-
-    const folderTextStyle = {
-        color: '#91bbff'
-    }
-
+    
     useEffect(() => {
-        const entries = fileSystem.getCurrentNode().map(nodeEntry => <span style={nodeEntry.type === 'folder' ? folderTextStyle:{}}>{nodeEntry.name}</span>);
-        fileSystem.addToCommandLog(<div style={{ display: 'flex', gap: '10px' }}>{...entries}</div>, "");
+        if (fileSystem) {
+            const folderTextStyle = {
+                color: '#91bbff'
+            }
+            const entries = fileSystem.getCurrentNode().map(nodeEntry => <span style={nodeEntry.type === 'folder' ? folderTextStyle:{}}>{nodeEntry.name}</span>);
+            fileSystem.addToCommandLog(<div style={{ display: 'flex', gap: '10px' }}>{...entries}</div>, "");
+        }
     }, []);
     
     return "";
@@ -20,10 +20,8 @@ const Ls:TerminalFunction = () => {
 
 export default Ls;
 
-export function description() {
-    return "Zeigt Inhalte des aktuellen Verzeichnises an";
-}
+Ls.description = "Zeigt Inhalte des aktuellen Verzeichnises an";
 
-export const category: string = 'filesystem';
+Ls.category = 'filesystem';
 
-export const functionParams: FunctionParam[] = [{ params: [{ param: 'Verzeichnis', required: true }], description: 'Wechselt in das angegebene Verzeichnis' }];
+Ls.functionParams = [{ params: [{ param: 'Verzeichnis', required: true }], description: 'Wechselt in das angegebene Verzeichnis' }];
