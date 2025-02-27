@@ -143,19 +143,19 @@ export const CommandPrefixProvider: React.FC<PropsWithChildren> = ({ children })
     }, [systemTree])
 
     return (
-    <FileSystemContext.Provider value={{ 
-        changeNode,
-        currentPath,
-        createFile,
-        getCurrentNode,
-        commandLog,
-        addToCommandLog,
-        getCurrentPrefix,
-        setCommandPrefix,
-        clearCommandLog,
-        createFolder 
-    }}>
-        {children}
-    </FileSystemContext.Provider>
+        <FileSystemContext.Provider value={{ 
+            changeNode,
+            currentPath,
+            createFile,
+            getCurrentNode,
+            commandLog,
+            addToCommandLog,
+            getCurrentPrefix,
+            setCommandPrefix,
+            clearCommandLog,
+            createFolder 
+        }}>
+            {children}
+        </FileSystemContext.Provider>
     );
 };

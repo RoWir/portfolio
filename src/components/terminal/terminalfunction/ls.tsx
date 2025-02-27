@@ -1,5 +1,5 @@
 import { useContext, useEffect } from "react";
-import { TerminalFunction } from "./_types";
+import { FunctionParam, TerminalFunction } from "./_types";
 import { FileSystemContext } from "../FileSystemContext";
 
 const Ls:TerminalFunction = () => {
@@ -7,7 +7,7 @@ const Ls:TerminalFunction = () => {
     if (!fileSystem) return "Context Error!";
 
     const folderTextStyle = {
-        color: 'blue'
+        color: '#91bbff'
     }
 
     useEffect(() => {
@@ -23,3 +23,7 @@ export default Ls;
 export function description() {
     return "Zeigt Inhalte des aktuellen Verzeichnises an";
 }
+
+export const category: string = 'filesystem';
+
+export const functionParams: FunctionParam[] = [{ params: [{ param: 'Verzeichnis', required: true }], description: 'Wechselt in das angegebene Verzeichnis' }];

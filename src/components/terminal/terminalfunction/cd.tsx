@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { TerminalFunction } from "./_types";
-import { FileSystemContext } from "../FileSystemContext";
+import { FileSystemContext, FileSystemContextType } from "../FileSystemContext";
 
 const Cd:TerminalFunction = ({ userInput }) => {
     const [returnMessage, setReturnMessage] = useState<string>("");
@@ -27,3 +27,11 @@ export default Cd;
 export function description() {
     return "Verzeichnis ändern"
 }
+
+export const category = 'filesystem';
+
+export const autoCompleteValues = (fileSystem: FileSystemContextType) => [
+    fileSystem!.getCurrentNode()
+        .filter(node => node.type === 'folder')
+        .map(node => node.name)
+];

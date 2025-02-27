@@ -1,5 +1,5 @@
 import { useContext, useEffect } from "react";
-import { TerminalFunction } from "./_types";
+import { FunctionParam, TerminalFunction } from "./_types";
 import { FileSystemContext } from "../FileSystemContext";
 
 const Mkdir:TerminalFunction = ({userInput}) => {
@@ -21,3 +21,15 @@ const Mkdir:TerminalFunction = ({userInput}) => {
 
 export default Mkdir;
 
+export function description() {
+    return "Erstellt ein Verzeichnis";
+}
+
+export const category = 'filesystem';
+
+export const functionParams: FunctionParam[] = [{ 
+    params: [
+        { param: 'Name', required: true }
+    ], 
+    description: 'Erstellt ein Verzeichnis mit dem angegebenen Namen' 
+}];

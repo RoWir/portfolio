@@ -1,40 +1,101 @@
-import { TerminalFunction } from "./_types";
+import { FunctionParam, TerminalFunction } from "./_types";
 
-const Help:TerminalFunction = () => {
-    const headingStyle={
-        fontWeight: 'bold',
-        margin: '0 auto'
-    };
-    const commandRow={
-        marginLeft: '10px'
-    };
-    const command={
-        width: '25%',
-        display: 'inline-flex'
-    };
-    const commandDescription={
-        width: '75%',
-        display: 'inline-flex'
-    };
+type ModuleInfo = Record<string, { description: () => string|undefined, category: string|undefined, functionParams: FunctionParam[]|undefined }>;
+type CommandInfo = { name: string, description: string, category: string, functionParams: FunctionParam[] };
 
-    const commandImports: Record<string, { description: () => string|undefined }> = import.meta.glob("/src/components/terminal/terminalfunction/*.tsx", { eager: true });
-    const commandList:{ name: string|undefined, description: string|undefined }[] = Object.entries(commandImports)
+const headingStyle:React.CSSProperties={
+    fontWeight: 'bold',
+    margin: '0 auto',
+    textTransform: 'capitalize'
+};
+const commandRowStyle:React.CSSProperties={
+    marginLeft: '10px'
+};
+const commandStyle:React.CSSProperties={
+    width: '30%',
+    display: 'inline-flex'
+};
+const commandDescriptionStyle:React.CSSProperties={
+    width: '70%',
+    display: 'inline-flex'
+};
+
+const Help:TerminalFunction = ({userInput}) => {
+    const command = userInput.split(" ")[1];
+
+    if (!command) return getHelpOverview();
+
+    return getCommandOverview(command);
+}
+
+const getCommandInfos = (command?: string):CommandInfo[] => {
+    const commandImports: ModuleInfo = import.meta.glob("/src/components/terminal/terminalfunction/*.tsx", { eager: true });
+    return Object.entries(commandImports)
         .filter((path) => !path[0].includes('_types.tsx'))
         .map(([path, mod]) => {
-            const fileName = path.split('/').pop();
+            const fileName = path.split('/').pop() ?? path;
             return {
                 name: fileName?.replace(/\.[^/.]+$/, ''),
-                description: mod.description !== undefined ? mod.description() : ''
+                description: mod.description?.() ?? '',
+                category: mod.category ?? 'general',
+                functionParams: mod.functionParams ?? []
             };
-        }
+        })
+        .filter(commandEntry => !command || commandEntry.name === command);
+}
+
+const getCommandOverview = (command: string) => {
+    const commandInfoArray = getCommandInfos(command);
+    if (commandInfoArray.length === 0) return "Der Befehl '" + command + "' konnte nicht gefunden werden. Tippfehler?";
+
+    const commandInfo = commandInfoArray[0];
+    if (commandInfo.functionParams.length === 0) return commandInfo.description;
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={headingStyle}>{commandInfo.name}</span>
+            {commandInfo.functionParams.map((commandParam) => (
+                <div key={commandParam.params.map(paramEntry => paramEntry.param).join("-")} style={commandRowStyle}>
+                    <span style={commandStyle}>{commandInfo.name+' '+commandParam.params.map(paramEntry => `${paramEntry.required ? '(' : '['}${paramEntry.param}${paramEntry.required ? ')' : ']'}`).join(" ")}</span>
+                    <span style={commandDescriptionStyle}>{commandParam.description}</span>
+                </div>
+            ))}
+        </div>
     );
+}
+
+const getHelpOverview = () => {
+    const commandList = getCommandInfos();
+
+    const groupedCommands = commandList.reduce((acc, command) => {
+        command.category = command.category === undefined ? 'general' : command.category;
+        if (!acc[command.category]) {
+          acc[command.category] = [];
+        }
+        acc[command.category].push(command);
+        return acc;
+    }, {} as Record<string, typeof commandList>);
     
     return (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={headingStyle}>General</span>
-            {commandList.map(commandEntry => <div key={commandEntry.name} style={commandRow}><span style={command}>{commandEntry.name}</span><span style={commandDescription}>{commandEntry.description}</span></div>)}
+            {Object.entries(groupedCommands).map(([category, commands], index) => (
+                <div key={category} style={{ display: 'flex', flexDirection: 'column' }}>
+                    {index !== 0 ? <br/>: ''}
+                    <span style={headingStyle}>{category}</span>
+                    {commands.map(commandEntry => 
+                        <div key={commandEntry.name} style={commandRowStyle}>
+                            <span style={commandStyle}>{commandEntry.name}</span>
+                            <span style={commandDescriptionStyle}>{commandEntry.description}</span>
+                        </div>
+                    )}
+                </div>
+            ))}
         </div>
     );
 }
 
 export default Help;
+
+export const autoCompleteValues = () => [
+    getCommandInfos().map(command => command.name)
+];
