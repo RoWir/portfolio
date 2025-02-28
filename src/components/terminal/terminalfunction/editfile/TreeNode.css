@@ -1,0 +1,14 @@
+.treeNodeName {
+    margin-left: 4px;
+}
+
+.treeNodeBody {
+    display: flex;
+    align-items: center;
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+
+.activeNode {
+    background-color: red;
+}

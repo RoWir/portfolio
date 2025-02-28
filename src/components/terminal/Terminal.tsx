@@ -1,8 +1,9 @@
-import { ChangeEvent, FC, FormEvent, KeyboardEvent, useContext, useEffect, useRef, useState, useMemo, useCallback } from "react";
+import { ChangeEvent, FC, FormEvent, KeyboardEvent, useContext, useEffect, useRef, useState, useMemo, useCallback, ReactElement } from "react";
 import "./Terminal.css"
 import { FaCircle } from "react-icons/fa";
 import { TerminalFunction } from "./terminalfunction/_types";
 import { FileSystemContext } from "./FileSystemContext";
+import FullscreenWrap from "./fullscreen/FullscreenWrap";
 
 const Terminal: FC = () => {
     const inputRef = useRef<HTMLInputElement>(null);
@@ -12,6 +13,7 @@ const Terminal: FC = () => {
     const [filteredAutocompleteSuggestions, setFilteredAutocompleteSuggestions] = useState<string[]>([]);
     const [autocompleteSuggestions, setAutocompleteSuggestions] = useState<string[]>([]);
     const [autocompleteIndex, setAutocompleteIndex] = useState<number>(0);
+    const [fullscreenApp, setFullscreenApp] = useState<ReactElement|null>(null);
 
     const fileSystem = useContext(FileSystemContext);
     
@@ -30,7 +32,8 @@ const Terminal: FC = () => {
                 return {
                     func: CommandComponent,
                     name: componentName.replace(/\.[^/.]+$/, ''),
-                    autoCompleteValues: CommandComponent.autoCompleteValues?.(fileSystem) ?? [[]]
+                    autoCompleteValues: CommandComponent.autoCompleteValues?.(fileSystem) ?? [[]],
+                    fullscreen: CommandComponent.fullscreen ?? false
                 };
             });
     }, [fileSystem]);
@@ -56,24 +59,32 @@ const Terminal: FC = () => {
         if (!fileSystem) return;
         
         const { addToCommandLog } = fileSystem;
-        let commandFound = false;
         const commandName = input.split(" ")[0];
         
         const command = commandList.find(cmd => cmd.name === commandName);
         if (command && input !== "") {
-            commandFound = true;
             const ComponentName = command.func;
-            addToCommandLog(
-                <ComponentName 
+            if (command.fullscreen) {
+                setFullscreenApp(<ComponentName 
                     userInput={input}  
                     setUserInput={setUserInput}
                     setAutocompleteSuggestions={setAutocompleteSuggestions}
-                />, 
-                ''
-            );
+                    setFullscreenApp={setFullscreenApp}
+                />)
+            } else {
+                addToCommandLog(
+                    <ComponentName 
+                        userInput={input}  
+                        setUserInput={setUserInput}
+                        setAutocompleteSuggestions={setAutocompleteSuggestions}
+                        setFullscreenApp={setFullscreenApp}
+                    />, 
+                    ''
+                );
+            }
         }
         
-        if (!commandFound && input !== "") {
+        if (!command && input !== "") {
             addToCommandLog(`Der Befehl: '${input}' konnte nicht gefunden werden`, '');
         }
     }, [commandList, fileSystem]);
@@ -183,24 +194,32 @@ const Terminal: FC = () => {
                     The Terminal
                 </div>
             </div>
-            <div className="terminalBody" onClick={onTerminalClick}>
-                {commandLog.map((command, index) => (
-                    <span key={index}>{command.prefix}{command.message}</span>
-                ))}
-                <span className="terminalInputWrap">
-                    {getCurrentPrefix()}
-                    <form className="terminalInputForm" onSubmit={onMessageSent}>
-                        <input 
-                            type="text" 
-                            className="terminalInput"
-                            value={userInput}
-                            onChange={onTerminalInputChange}
-                            ref={inputRef}
-                            onKeyDown={onTerminalInputKeyDown}
-                        />
-                        <button style={{ width: 0 }} hidden></button>
-                    </form>
-                </span>
+            <div className="terminalBody">
+                {fullscreenApp ? 
+                    <FullscreenWrap setFullscreenApp={setFullscreenApp}>
+                        {fullscreenApp}
+                    </FullscreenWrap>
+                    :
+                    <div className="terminalCommandlineBody" onClick={onTerminalClick}>
+                        {commandLog.map((command, index) => (
+                            <span key={index}>{command.prefix}{command.message}</span>
+                        ))}
+                        <span className="terminalInputWrap">
+                            {getCurrentPrefix()}
+                            <form className="terminalInputForm" onSubmit={onMessageSent}>
+                                <input 
+                                    type="text" 
+                                    className="terminalInput"
+                                    value={userInput}
+                                    onChange={onTerminalInputChange}
+                                    ref={inputRef}
+                                    onKeyDown={onTerminalInputKeyDown}
+                                />
+                                <button style={{ width: 0 }} hidden></button>
+                            </form>
+                        </span>
+                    </div>
+                }
             </div>
         </div>
     );

@@ -1,5 +1,5 @@
 import React, { createContext, PropsWithChildren, ReactElement, SetStateAction, useEffect, useState } from "react";
-import { Command } from "./_types";
+import { Command, File, Folder, TreeNode } from "./_types";
 
 // Create a context to provide `setCommandPrefix`
 export type FileSystemContextType = {
@@ -12,30 +12,27 @@ export type FileSystemContextType = {
     getCurrentPrefix: () => string,
     setCommandPrefix: React.Dispatch<SetStateAction<string>>,
     clearCommandLog: () => void,
-    createFolder: (folderName: string) => void
+    createFolder: (folderName: string) => void,
+    readFile: (fileName: string) => Uint8Array<ArrayBufferLike> | undefined,
+    writeFile: (fileName: string, data: Uint8Array<ArrayBufferLike>) => void,
+    systemTree: TreeNode,
+    commandPrefix: string
 }|null;
 
 export const FileSystemContext = createContext<FileSystemContextType>(null);
 
-type File = {
-    type: 'file',
-    name: string,
-    file: Uint8Array<ArrayBufferLike>
-}
-
-type Folder = {
-    type: 'folder',
-    name: string,
-    children: TreeNode
-}
-
-type TreeNode = (File|Folder)[]
-
 export const FileSystemProvider: React.FC<PropsWithChildren> = ({ children }) => {
     const [systemTree, setSystemTree] = useState<TreeNode>([
-        {type:'folder' as const,name:'testFolder',children:[{type:'folder' as const,name:'test2',children:[]}]},
-        {type:'file' as const,name:'testFile',file: new Uint8Array()},
-        {type:'file' as const,name:'anotherTestFile',file: new Uint8Array()}
+        {type:'folder' as const,name:'testFolder',path:'',children: [{
+            type:'folder' as const,
+            name:'test2',
+            children:[{type:'file' as const,name:'testFile',file: new Uint8Array(),id: crypto.randomUUID(),path:'testFolder/test2/'}],
+            path: ''
+        },{
+            type:'file' as const,name:'testFile',file: new Uint8Array(),id: crypto.randomUUID(),path:'testFolder/'
+        }]},
+        {type:'file' as const,name:'testFile',file: new Uint8Array(),id: crypto.randomUUID(),path:''},
+        {type:'file' as const,name:'anotherTestFile',file: new Uint8Array(),id: crypto.randomUUID(),path:''}
     ]);
     const [currentPath, setCurrentPath] = useState<string[]>([]);
     const [commandLog, setCommandLog] = useState<Command[]>([
@@ -53,19 +50,28 @@ export const FileSystemProvider: React.FC<PropsWithChildren> = ({ children }) =>
 
     const getCurrentPrefix = () => commandPrefix + (currentPath.length !== 0 ? currentPath.join('/') : '~') + ' %\xa0';
 
+    useEffect(() => {
+        console.log(getCurrentPrefix());
+    }, [currentPath,commandPrefix])
+
     const getCurrentNode = () => {
         let currentNode: TreeNode = systemTree;
         currentPath.forEach(path => {
-            const folder = systemTree.find(node => node.type === 'folder' && node.name === path);
+            const folder = currentNode.find(node => node.type === 'folder' && node.name === path);
             if (folder && folder.type === 'folder') currentNode = folder.children;
         });
         return currentNode;
     }
 
     const changeNode = (path:string) => {
-        const pathArray = path.split("/").filter(Boolean);
+        const inputArray = path.split("/").filter(Boolean);
 
-        if (pathArray[0] === '..') {
+        if (inputArray[0] === '~') {
+            setCurrentPath([]);
+            return true;
+        }
+
+        if (inputArray[0] === '..') {
             if (currentPath.length > 1) {
                 setCurrentPath(prevState => prevState.slice(0, -1));
                 return true;
@@ -74,7 +80,10 @@ export const FileSystemProvider: React.FC<PropsWithChildren> = ({ children }) =>
                 return true;
             }
         }
-        let currentNode = getCurrentNode();
+
+        const pathArray = [...currentPath, ...inputArray];
+
+        let currentNode = systemTree;
         
         for (const path of pathArray) {
             const folder = currentNode.find(node => node.type === 'folder' && node.name === path);
@@ -84,7 +93,7 @@ export const FileSystemProvider: React.FC<PropsWithChildren> = ({ children }) =>
                 return false;
             }
         };
-        setCurrentPath(prevState => [...prevState, ...pathArray]);
+        setCurrentPath(pathArray);
         return true;
     }
 
@@ -99,7 +108,9 @@ export const FileSystemProvider: React.FC<PropsWithChildren> = ({ children }) =>
             const newFile: File = {
                 type: 'file',
                 name: fileName,
-                file: file
+                file: file,
+                id: crypto.randomUUID(),
+                path: currentPath.length === 0 ? '' : currentPath.join('/') + '/'
             }
 
             setSystemTree(prevState => addNodeToTree(prevState, newFile, currentPath));
@@ -116,7 +127,8 @@ export const FileSystemProvider: React.FC<PropsWithChildren> = ({ children }) =>
             const newFolder: Folder = {
                 type: 'folder',
                 name: folderName,
-                children: []
+                children: [],
+                path: currentPath.length === 0 ? '' : currentPath.join('/') + '/'
             }
 
             setSystemTree(prevState => addNodeToTree(prevState, newFolder, currentPath));
@@ -138,6 +150,22 @@ export const FileSystemProvider: React.FC<PropsWithChildren> = ({ children }) =>
         })
     }
 
+    const readFile = (fileName:string) => {
+        const currentNode = getCurrentNode();
+        const file = currentNode.find(node => "file" in node && node.name === fileName);
+        if (file) {
+            return (file as File).file;
+        } else return file;
+    }
+
+    const writeFile = (fileName:string, data:Uint8Array<ArrayBufferLike>) => {
+        const currentNode = getCurrentNode();
+        const file = currentNode.find(node => "file" in node && node.name === fileName);
+        if (file) {
+            (file as File).file = data;
+        } else addToCommandLog("Die Datei wurde nicht gefunden","");
+    }
+
     useEffect(() => {
         console.log(systemTree)
     }, [systemTree])
@@ -153,7 +181,11 @@ export const FileSystemProvider: React.FC<PropsWithChildren> = ({ children }) =>
             getCurrentPrefix,
             setCommandPrefix,
             clearCommandLog,
-            createFolder 
+            createFolder,
+            readFile,
+            writeFile,
+            systemTree,
+            commandPrefix
         }}>
             {children}
         </FileSystemContext.Provider>
