@@ -2,6 +2,7 @@ import { SetStateAction, useContext, useMemo } from "react";
 import { FileSystemContext } from "../../FileSystemContext";
 import { File } from "../../_types";
 import TreeNode from "./TreeNode";
+import './FileBrowser.css'
 
 interface FileBrowserProps {
     selectedFile: File|null;
@@ -11,12 +12,13 @@ interface FileBrowserProps {
 const FileBrowser: React.FC<FileBrowserProps> = ({ selectedFile, setSelectedFile }) => {
     const fileSystem = useContext(FileSystemContext);
     const cssPrefix = "editorFileBrowser";
-    if (!fileSystem) return "";
-    
-    const tree = useMemo(() => {
-        return fileSystem.systemTree
-    }, [fileSystem.systemTree])
 
+    const tree = useMemo(() => {
+        if (!fileSystem) return [];
+        return fileSystem.systemTree
+    }, [fileSystem])
+
+    
     return(
         <div className={cssPrefix + "Wrap"}>
             {tree.map((node,index) => (

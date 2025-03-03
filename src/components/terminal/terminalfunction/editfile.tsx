@@ -6,16 +6,17 @@ import { MdClose } from "react-icons/md";
 import './editfile.css'
 import FileBrowser from "./editfile/FileBrowser";
 import { File } from "../_types";
+import TextEditor from "./editfile/TextEditor";
 
 const EditFile: TerminalFunction = ({ setFullscreenApp }) => {
     const [selectedFile, setSelectedFile] = useState<File|null>(null);
     const fileSystem = useContext(FileSystemContext);
 
-    if (!fileSystem) return "";
-
     const onCloseEditor = useCallback(() => {
-        setFullscreenApp(null);
-    },[setFullscreenApp])
+      setFullscreenApp(null);
+  },[setFullscreenApp])
+
+    if (!fileSystem) return "";
     
     return (
         <div className="editFileWrap">
@@ -29,10 +30,10 @@ const EditFile: TerminalFunction = ({ setFullscreenApp }) => {
             </div>
             <div className="editorBody">
                 <div className="editorFileBrowser">
-                    <FileBrowser selectedFile={selectedFile} setSelectedFile={setSelectedFile}/>
+                  <FileBrowser selectedFile={selectedFile} setSelectedFile={setSelectedFile}/>
                 </div>
                 <div className="editorTextArea">
-
+                  <TextEditor selectedFile={selectedFile}/>
                 </div>
             </div>
         </div>

@@ -43,3 +43,14 @@
     border-bottom-right-radius: 10px;
     border-bottom-left-radius: 10px;
 }
+
+.editorFileBrowser {
+    width: 20%;
+    overflow: auto;
+    border-right: #262931 4px solid;
+}
+
+.editorTextArea {
+    width: 80%;
+    height: 100%;
+}

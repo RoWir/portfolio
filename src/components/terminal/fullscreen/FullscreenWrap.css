@@ -2,6 +2,6 @@
     border-bottom-right-radius: 10px;
     border-bottom-left-radius: 10px;
     box-sizing: border-box;
-    height: calc(100% - 5px);
+    height: 100%;
     width: 100%;
 }

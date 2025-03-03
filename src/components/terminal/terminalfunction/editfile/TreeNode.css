@@ -5,10 +5,15 @@
 .treeNodeBody {
     display: flex;
     align-items: center;
-    padding-top: 1px;
-    padding-bottom: 1px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    cursor: pointer;
 }
 
 .activeNode {
     background-color: red;
+}
+
+.treeNodeWrap {
+    padding: 0px 12px;
 }
