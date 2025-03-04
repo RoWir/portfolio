@@ -1,6 +1,7 @@
 import { FormEvent, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { File } from "../../_types"
 import { FileSystemContext } from "../../FileSystemContext";
+import './TextEditor.css';
 
 interface TextEditorProps {
     selectedFile: File|null;
@@ -33,26 +34,82 @@ const TextEditor: React.FC<TextEditorProps> = ({ selectedFile }) => {
             for (let i = 0; i < a.length; i++) {
                 binaryArray[i] = a.charCodeAt(i);
             }
+            console.log(binaryArray);
             return binaryArray.buffer;
         }
     
         console.log(selectedFile);
         const data = new TextDecoder('utf8').decode(getTestFile());
-
-        setFileData(data);
+        if (!selectedFile) return;
+        setFileData(new TextDecoder('utf8').decode(selectedFile.file));
     }, [selectedFile])
+
+    const onLineKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>, lineIndex:number) => {
+        const target = e.currentTarget;
+        if (!(target instanceof HTMLInputElement) || target.selectionStart === null) return;
+        const value = target.value;
+
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            insertLineData(lineIndex, value.slice(0, target.selectionStart)+'\n');
+            insertLineData(lineIndex+1, value.slice(target.selectionStart, value.length));
+            const nextLine = document.getElementsByClassName('textEditorInput')[lineIndex+1] as HTMLInputElement;
+            nextLine.value = value.slice(target.selectionStart, value.length);
+            nextLine.focus();
+            nextLine.setSelectionRange(0, 0);
+        } else if (e.key === 'Backspace' && target.selectionStart === 0 && lineIndex > 0) {
+            e.preventDefault();
+            const prevLine = document.getElementsByClassName('textEditorInput')[lineIndex-1] as HTMLInputElement;
+            const prevLineLength = prevLine.value.length;
+            insertLineData(lineIndex-1, prevLine.value + value);
+            removeLineData(lineIndex);
+            prevLine.value = prevLine.value + value;
+            prevLine.focus();
+            prevLine.setSelectionRange(prevLineLength, prevLineLength);
+        } else if (e.key === 'ArrowUp' && lineIndex > 0) {
+            e.preventDefault();
+            const prevLine = document.getElementsByClassName('textEditorInput')[lineIndex-1] as HTMLInputElement;
+            prevLine.focus();
+            prevLine.setSelectionRange(target.selectionStart, target.selectionStart);
+        } else if (e.key === 'ArrowDown' && lineIndex < fileData.split('\n').length-1) {
+            e.preventDefault();
+            const nextLine = document.getElementsByClassName('textEditorInput')[lineIndex+1] as HTMLInputElement;
+            nextLine.focus();
+            nextLine.setSelectionRange(target.selectionStart, target.selectionStart);
+        } else if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            if (!selectedFile) return;
+            fileSystem?.updateFile({ ...selectedFile, file: new TextEncoder().encode(fileData) });
+        }
+    }, [])
+
+    const onLineChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, lineIndex: number) => {
+        insertLineData(lineIndex, e.target.value);
+    }, [])
+
+    const insertLineData = useCallback((lineIndex: number, data: string) => {
+        setFileData(prevState => prevState.split('\n').map((line, index) => index === lineIndex ? data : line).join('\n'));
+    }, []);
+
+    const removeLineData = useCallback((lineIndex: number) => {
+        setFileData(prevState => prevState.split('\n').filter((_, index) => index !== lineIndex).join('\n'));
+    }, [])
 
     if (!fileSystem) return "";
     if (selectedFile === null) return <div>Keine Datei ausgewählt</div>
-
     
     return (
-        <div style={{ flexDirection: 'column' ,display: "flex", width: "100%", height: "100%", flexGrow: 1, padding: "0.5em" }}>
-            {fileData.split('\n').map((line, lineIndex) => (
-                <div key={lineIndex} style={{ height: '1.2em', whiteSpace: 'pre' }}>
-                    {line}
-                </div>
-            ))}
+        <div style={{ display: "flex", width: "100%", height: "100%" }}>
+            <div className="textEditorRowNumber">
+                {fileData.split('\n').map((_, lineIndex) => (
+                    <span key={lineIndex}>{lineIndex+1}</span>
+                ))}
+            </div>
+            <div style={{ height: '1.2em', whiteSpace: 'pre', display: 'flex', flexDirection: 'column', paddingLeft: '5px' }}>
+                {fileData.split('\n').map((line, lineIndex) => (
+                    <input className="textEditorInput" type="text" onKeyDown={e => onLineKeyDown(e, lineIndex)} onChange={e => onLineChange(e, lineIndex)} key={lineIndex} value={line}></input>
+                ))}
+            </div>
         </div>
     );
 }

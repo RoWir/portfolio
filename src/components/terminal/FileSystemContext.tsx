@@ -16,7 +16,8 @@ export type FileSystemContextType = {
     readFile: (fileName: string) => Uint8Array<ArrayBufferLike> | undefined,
     writeFile: (fileName: string, data: Uint8Array<ArrayBufferLike>) => void,
     systemTree: TreeNode,
-    commandPrefix: string
+    commandPrefix: string,
+    updateFile: (file: File) => void
 }|null;
 
 export const FileSystemContext = createContext<FileSystemContextType>(null);
@@ -53,6 +54,22 @@ export const FileSystemProvider: React.FC<PropsWithChildren> = ({ children }) =>
     useEffect(() => {
         console.log(getCurrentPrefix());
     }, [currentPath,commandPrefix])
+
+    const getNode = (path:string) => {
+        const pathArray = path.split("/");
+        let currentNode = systemTree;
+
+        for (const path of pathArray) {
+            const folder = currentNode.find(node => node.type === 'folder' && node.name === path);
+            if (folder && folder.type === 'folder') {
+                currentNode = folder.children;
+            } else {
+                return false;
+            }
+        };
+
+        return currentNode;
+    }
 
     const getCurrentNode = () => {
         let currentNode: TreeNode = systemTree;
@@ -137,11 +154,21 @@ export const FileSystemProvider: React.FC<PropsWithChildren> = ({ children }) =>
     }
 
     const addNodeToTree = (tree:TreeNode, newNode: File|Folder, path: string[]):TreeNode => {
-        if (path.length === 0) return [...tree, newNode];
+        if (path.length === 0) {
+            if (newNode.type === 'file') {
+                const foundNode = [...tree.map(treeNode => treeNode.children)].flat().find(childNode => childNode.type === 'file' && childNode.id === newNode.id);
+                debugger
+            }
+            return [...tree, newNode];
+        }
 
         return tree.map(node => {
             if (node.type === 'folder' && node.name === path[0]) {
                 if (path.length === 1) {
+                    if (newNode.type === 'file') {
+                        const foundNode = node.children.find(childNode => childNode.type === 'file' && childNode.id === newNode.id);
+                        debugger
+                    }
                     return { ...node, children: [...node.children, newNode ]};
                 } else {
                     return { ...node, children: addNodeToTree(node.children, newNode, path.slice(1)) }
@@ -166,6 +193,10 @@ export const FileSystemProvider: React.FC<PropsWithChildren> = ({ children }) =>
         } else addToCommandLog("Die Datei wurde nicht gefunden","");
     }
 
+    const updateFile = (file: File) => {
+        addNodeToTree(systemTree, file, file.path.split('/'));
+    }
+
     useEffect(() => {
         console.log(systemTree)
     }, [systemTree])
@@ -185,7 +216,8 @@ export const FileSystemProvider: React.FC<PropsWithChildren> = ({ children }) =>
             readFile,
             writeFile,
             systemTree,
-            commandPrefix
+            commandPrefix,
+            updateFile
         }}>
             {children}
         </FileSystemContext.Provider>

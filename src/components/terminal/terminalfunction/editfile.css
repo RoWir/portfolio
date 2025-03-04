@@ -37,7 +37,7 @@
 
 .editorBody {
     display: flex;
-    height: 100%;
+    height: calc(100% - 31px);
     width: 100%;
     background: #0e1522;
     border-bottom-right-radius: 10px;
@@ -48,9 +48,11 @@
     width: 20%;
     overflow: auto;
     border-right: #262931 4px solid;
+    background: rgb(0, 3, 22);
 }
 
 .editorTextArea {
     width: 80%;
     height: 100%;
+    overflow: auto;
 }
