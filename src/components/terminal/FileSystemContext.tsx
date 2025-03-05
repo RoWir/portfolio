@@ -154,10 +154,9 @@ export const FileSystemProvider: React.FC<PropsWithChildren> = ({ children }) =>
     }
 
     const addNodeToTree = (tree:TreeNode, newNode: File|Folder, path: string[]):TreeNode => {
-        if (path.length === 0) {
+        if (path.filter(path => path !== '').length === 0) {
             if (newNode.type === 'file') {
-                const foundNode = [...tree.map(treeNode => treeNode.children)].flat().find(childNode => childNode.type === 'file' && childNode.id === newNode.id);
-                debugger
+                return [...tree.map(treeNode => treeNode.type === 'file' && treeNode.id === newNode.id ? newNode : treeNode)];
             }
             return [...tree, newNode];
         }
@@ -166,8 +165,7 @@ export const FileSystemProvider: React.FC<PropsWithChildren> = ({ children }) =>
             if (node.type === 'folder' && node.name === path[0]) {
                 if (path.length === 1) {
                     if (newNode.type === 'file') {
-                        const foundNode = node.children.find(childNode => childNode.type === 'file' && childNode.id === newNode.id);
-                        debugger
+                        return { ...node, children: [...node.children.map(childNode => childNode.type === 'file' && childNode.id === newNode.id ? newNode : childNode)]};
                     }
                     return { ...node, children: [...node.children, newNode ]};
                 } else {
@@ -194,7 +192,8 @@ export const FileSystemProvider: React.FC<PropsWithChildren> = ({ children }) =>
     }
 
     const updateFile = (file: File) => {
-        addNodeToTree(systemTree, file, file.path.split('/'));
+        console.log(file)
+        setSystemTree(prevState => addNodeToTree(prevState, file, file.path.split('/')));
     }
 
     useEffect(() => {
