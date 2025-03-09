@@ -1,6 +1,6 @@
 # React + TypeScript + Vite
 
-A small webapp that resembles a macOS terminal, with some of its functionalies.
+A small webapp that resembles a macOS terminal, with some of its functionalities.
 - a filesystem
   - navigation through the paths
   - creating files and folders
